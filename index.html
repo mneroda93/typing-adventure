@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Typing Adventure</title>
+
+</head>
+<style>
+    body {
+        color: white;
+        margin: 0;
+        padding: 0;
+        text-shadow: 1px 1px rgba(0,0,0,0.4);
+        user-select: none;
+        overflow: hidden;
+        font-size: 30px;
+        word-spacing: 0;
+        font-family: monospace, sans-serif;
+    }
+    span {
+        margin: 0;
+        padding: 0;
+        text-align: center;
+    }
+    #main {
+        margin: 0;
+        padding: 0;
+        height: 50vh;
+        width: 100vw;
+        background-color: #6969cc;
+    }
+    #intro-text {
+        position: absolute;
+        margin: auto auto;
+        top: 40vh;
+        width: 100%;
+    }
+    #text-box {
+        position: absolute;
+        margin: auto auto;
+        top: 45vh;
+        width: 100%;
+        white-space: nowrap;
+    }
+    #input span {
+    }
+    #text-box {
+        text-align: center;
+    }
+    #workspace {
+        margin-left: 500px;
+    }
+    #workspace span {
+        margin: 0;
+    }
+    .correct {
+        color: rgba(105, 105, 204, 1);
+    }
+    .false {
+        color: red;
+        border-radius: 50px;
+    }
+    .active { /*or other element you want*/
+        color: black;
+    }
+    #break {
+        position: absolute;
+        left: 490px;
+        color: red;
+    }
+    #time, #kpm, #wpm{
+        color: black;
+        border: 2px solid black;
+        padding: 2vw;
+        border-radius: 100px;
+        position: absolute;
+        top: 30vw;
+        left: 46.5vw;
+        width: 2vw;
+    }
+
+    #kpm {
+        top: 30vw;
+        left: 40vw;
+    }
+    #wpm {
+        top: 30vw;
+        left: 53vw;
+    }
+    #p1 {
+        color: black;
+        top: 37vw;
+        left: 41.5vw;
+    }
+    #p2 {
+        color: black;
+        top: 37vw;
+        left: 47.8vw;
+    }
+    #p3 {
+        color: black;
+        top: 37vw;
+        left: 54.7vw;
+    }
+
+    p {
+        display: inline-block;
+        margin: 0;
+        padding: 0;
+        position: absolute;
+    }
+</style>
+
+<body>
+<div id="main">
+    <div><span id="intro-text">Welcome to Typing Adventure!</span></div>
+    <div id="text-box"><span id="break">|</span><span id="workspace"></span></div>
+    <span id="time">60</span>
+    <span id="kpm">0</span>
+    <span id="wpm">0</span>
+    <p id="p1">KPM</p>
+    <p id="p2">Time</p>
+    <p id="p3">WPM</p>
+</div>
+<script>
+
+    function readJSONFile(file, callback) {
+        let JSONFile = new XMLHttpRequest();
+        JSONFile.overrideMimeType('application/json');
+        JSONFile.open('GET', file, true);
+        JSONFile.onreadystatechange = function() {
+            if(JSONFile.readyState === 4 && JSONFile.status === 200)
+                callback(JSONFile.responseText);
+        };
+        JSONFile.send(null);
+    };
+
+    let wrdsArr = []; // All words
+    let tmpWrdsArr = []; // 1000 random words
+    let workspace = document.getElementById('workspace'); // HTML Position where the random words are going to be inserted to
+    readJSONFile('words.json', function(json) { // Reading JSON file and parsing it into a JS array
+        wrdsArr = JSON.parse(json);
+        let q = 0;
+        for(q ; q < 1000 ; q ++) // Here there are 1000 random words pushed into a temporary array
+            tmpWrdsArr.push(wrdsArr[getRndNum()]);
+        let y = 0;
+        let tmpWrdsArrLngth = tmpWrdsArr.length;
+        for(y ; y < tmpWrdsArrLngth ; y ++) {
+            let word = tmpWrdsArr[y].split('');
+            word.push(' ');
+            let k = 0;
+            let wordSize = word.length;
+            for(k ; k < wordSize ; k ++) {
+                let letterNode = document.createTextNode(word[k]);
+                let spnElmnt = document.createElement('span');
+                spnElmnt.appendChild(letterNode);
+                workspace.appendChild(spnElmnt);
+            };
+        };
+        workspace.firstElementChild.classList.add('active');
+    });
+
+    let getRndNum = () => Math.floor(Math.random() * (1000));
+
+    let j = 0;
+    let chrs = workspace.children;
+    let sizeJ = chrs.length;
+    let timerRunning = false;
+    let kpm = 0;
+    let wpm = 0;
+    let mistype = false;
+
+    document.addEventListener('keydown', function(keyP) {
+        console.log('mistype is ' + mistype + ' at the start!');
+        if(!timerRunning) {
+            launchTimer(60);
+            timerRunning = true;
+        };
+        let elemnt = document.getElementById('workspace');
+        let style = window.getComputedStyle(elemnt);
+        let marginLeft = style.getPropertyValue('margin-left')
+        let marginAfter = marginLeft.split('');
+        marginAfter.pop();
+        marginAfter.pop();
+        let s = 0;
+        let mrgnAftrLength = marginAfter.length;
+        let newNum = '';
+        for(s ; s < mrgnAftrLength ; s ++)
+            newNum += marginAfter[s];
+        newNum -= 16.5;
+        document.getElementById('workspace').style.marginLeft = newNum + 'px';
+
+        if(keyP.key === chrs[j].innerText) {
+            kpm += 1;
+            document.getElementById('kpm').innerText = kpm;
+            chrs[j].classList.remove('active');
+            chrs[j].classList.add('correct');
+            if(j + 1 === sizeJ) {
+                j = 0;
+                chrs[j].classList.add('active');
+            } else {
+                chrs[j + 1].classList.add('active');
+                j ++;
+            };
+        } else {
+            mistype = true;
+            chrs[j].classList.add('false');
+            chrs[j].classList.remove('active');
+            if(j + 1 === sizeJ) {
+                j = 0;
+                chrs[j].classList.add('active');
+            } else {
+                chrs[j + 1].classList.add('active');
+                j ++;
+            };
+        };
+        console.log('mistype is ' + mistype + ' before evaluation!');
+        if(chrs[j - 1].innerText === ' ') {
+            if (mistype) {
+                mistype = false;
+            } else {
+                wpm += 1;
+                document.getElementById('wpm').innerText = wpm;
+            };
+        };
+    });
+
+    let timer;
+
+    function launchTimer(seconds) {
+        timer = setInterval(() => {
+            seconds -= 1;
+            document.getElementById('time').innerText = '' + seconds;
+            if(seconds - 1 === -1) {
+                document.getElementById('time').innerText = '' + 0;
+                clearInterval(timer);
+            }
+        }, 1000)
+    };
+
+</script>
+
+</body>
+
+</html>
