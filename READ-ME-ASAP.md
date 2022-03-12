@@ -5,7 +5,7 @@ PLEASE BEAR IN MIND.
 
 This is a an old project in which I did not care about efficiency or code readibility. 
 
-Why reveal this project it here?
+Why reveal the project then?
 
 Every person in any field has his first projects and for me this is a memory I hold dear to remind me where I started.
 
